@@ -23,6 +23,14 @@ else
   microk8s kubectl -n "$HEADSCALE_NAMESPACE" create secret generic headscale-db --from-literal=password="$HEADSCALE_DB_PASSWORD" --dry-run=client -o yaml | microk8s kubectl apply -f -
 fi
 export HEADSCALE_DB_PASSWORD
+if microk8s kubectl get ingressclass traefik >/dev/null 2>&1; then
+  EXISTING_TRAEFIK_NAMESPACE=$(microk8s kubectl get ingressclass traefik -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-namespace}')
+  if [[ -n "$EXISTING_TRAEFIK_NAMESPACE" && "$EXISTING_TRAEFIK_NAMESPACE" != "$TRAEFIK_NAMESPACE" ]]; then
+    echo "Traefik already belongs to Helm namespace '$EXISTING_TRAEFIK_NAMESPACE', but TRAEFIK_NAMESPACE='$TRAEFIK_NAMESPACE'." >&2
+    echo "Set TRAEFIK_NAMESPACE=$EXISTING_TRAEFIK_NAMESPACE in .env and rerun install.sh." >&2
+    exit 1
+  fi
+fi
 microk8s helm3 repo add traefik https://traefik.github.io/charts >/dev/null 2>&1 || true; microk8s helm3 repo update
 mkdir -p "$SCRIPT_DIR/.rendered"; envsubst < "$SCRIPT_DIR/traefik/values.yaml.template" > "$SCRIPT_DIR/.rendered/traefik-values.yaml"
 microk8s helm3 upgrade --install traefik traefik/traefik -n "$TRAEFIK_NAMESPACE" --create-namespace -f "$SCRIPT_DIR/.rendered/traefik-values.yaml" --wait

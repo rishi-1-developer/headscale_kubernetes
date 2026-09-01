@@ -6,7 +6,7 @@ This package deploys a single-node, hostpath-backed Headscale stack with Traefik
 UFW -> 80/tcp, 443/tcp, 3478/udp -> Traefik -> Headscale / Headplane
 ```
 
-All Kubernetes services are `ClusterIP`. There is no MetalLB, NodePort, or direct public exposure of the Kubernetes API, Headscale metrics (`9090`), Headscale HTTP (`8080`), or Headplane (`3000`).
+All Kubernetes services are `ClusterIP`. Traefik binds host ports `80/tcp`, `443/tcp`, and `3478/udp` on the MicroK8s node. There is no MetalLB, NodePort, or direct public exposure of the Kubernetes API, Headscale metrics (`9090`), Headscale HTTP (`8080`), or Headplane (`3000`).
 
 ## Prerequisites and install
 
@@ -53,6 +53,8 @@ Verification checks MicroK8s, nodes, pods, services, both Traefik route kinds, H
 ## Domains, Let's Encrypt, backups, and upgrades
 
 For DNS names, set `HEADSCALE_HOST=headscale.example.com` and `HEADPLANE_HOST=headplane.example.com`, then rerun `install.sh`. Add `certResolver: letsencrypt` under each route’s `tls` block when ready for public certificates. Traefik persists ACME data on `microk8s-hostpath`; the HTTP challenge requires port 80. Do not use Let's Encrypt for an IP-only endpoint.
+
+Host-port mode is simple for one public node, but ports 80, 443, and 3478 must be free on that node. For multinode operation, run Traefik as a DaemonSet on every ingress-capable node or place an external load balancer in front of the nodes; do not run multiple host-port pods on the same node.
 
 Back up the native PostgreSQL database, Headplane and Traefik ACME PVCs, Headscale private state, and `/opt/bitvivid-ca` (especially the root key). Pin/test image upgrades in `.env`, then rerun `install.sh`. Because PostgreSQL is external, it can later be replaced by a managed or HA PostgreSQL service without changing Headscale’s storage model.
 
