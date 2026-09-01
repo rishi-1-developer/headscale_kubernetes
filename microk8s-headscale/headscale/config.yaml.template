@@ -1,0 +1,42 @@
+server_url: https://${HEADSCALE_HOST}
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 0.0.0.0:9090
+grpc_listen_addr: 0.0.0.0:50443
+grpc_allow_insecure: false
+
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+  allocation: sequential
+
+derp:
+  server:
+    enabled: true
+    region_id: 999
+    region_code: local
+    region_name: Embedded DERP
+    stun_listen_addr: 0.0.0.0:3478
+  urls: []
+  paths: []
+  auto_update_enabled: false
+  update_frequency: 24h
+
+database:
+  type: postgres
+  postgres:
+    host: ${HEADSCALE_DB_HOST}
+    port: ${HEADSCALE_DB_PORT}
+    name: ${HEADSCALE_DB_NAME}
+    user: ${HEADSCALE_DB_USER}
+    pass: __HEADSCALE_DB_PASSWORD__
+
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+log:
+  level: info
+  format: text
+acl:
+  policy_path: /etc/headscale/acl.hujson

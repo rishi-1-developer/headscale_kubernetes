@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headscale-data
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: microk8s-hostpath
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headscale
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: headscale }
+  template:
+    metadata:
+      labels: { app: headscale }
+    spec:
+      serviceAccountName: default
+      initContainers:
+        - name: render-config
+          image: alpine:3.20
+          command: [sh, -c]
+          args:
+            - sed "s|__HEADSCALE_DB_PASSWORD__|$HEADSCALE_DB_PASSWORD|g" /config-template/config.yaml > /config/config.yaml && cp /config-template/acl.hujson /config/acl.hujson
+          env:
+            - name: HEADSCALE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: headscale-db, key: password }
+          volumeMounts:
+            - { name: config-template, mountPath: /config-template }
+            - { name: config, mountPath: /config }
+      containers:
+        - name: headscale
+          image: ${HEADSCALE_IMAGE}
+          args: [serve, /etc/headscale/config.yaml]
+          ports:
+            - { name: http, containerPort: 8080 }
+            - { name: derp-stun, containerPort: 3478, protocol: UDP }
+            - { name: metrics, containerPort: 9090 }
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          volumeMounts:
+            - { name: config, mountPath: /etc/headscale }
+            - { name: data, mountPath: /var/lib/headscale }
+      volumes:
+        - name: config-template
+          configMap: { name: headscale-config }
+        - name: config
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim: { claimName: headscale-data }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headscale
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  type: ClusterIP
+  selector: { app: headscale }
+  ports:
+    - { name: http, port: 8080, targetPort: http, protocol: TCP }
+    - { name: derp-stun, port: 3478, targetPort: derp-stun, protocol: UDP }
+    - { name: metrics, port: 9090, targetPort: metrics, protocol: TCP }

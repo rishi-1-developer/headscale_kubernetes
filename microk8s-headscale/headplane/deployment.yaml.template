@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headplane-data
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: microk8s-hostpath
+  resources:
+    requests: { storage: 1Gi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headplane
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: headplane } }
+  template:
+    metadata: { labels: { app: headplane } }
+    spec:
+      containers:
+        - name: headplane
+          image: ${HEADPLANE_IMAGE}
+          ports: [{ name: http, containerPort: 3000 }]
+          env:
+            - { name: HEADPLANE_COOKIE_SECRET, valueFrom: { secretKeyRef: { name: headplane-secret, key: cookie-secret } } }
+            - { name: HEADSCALE_API_KEY, valueFrom: { secretKeyRef: { name: headplane-secret, key: api-key } } }
+          volumeMounts:
+            - { name: config, mountPath: /etc/headplane }
+            - { name: data, mountPath: /var/lib/headplane }
+      volumes:
+        - name: config
+          configMap: { name: headplane-config }
+        - name: data
+          persistentVolumeClaim: { claimName: headplane-data }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headplane
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  type: ClusterIP
+  selector: { app: headplane }
+  ports: [{ name: http, port: 3000, targetPort: http }]

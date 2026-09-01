@@ -1,0 +1,10 @@
+{
+  // Permissive bootstrap policy. Tighten this before onboarding production users.
+  "acls": [
+    { "action": "accept", "src": ["*"], "dst": ["*"] }
+  ],
+  "groups": {},
+  "tagOwners": {},
+  "autoApprovers": {},
+  "ssh": []
+}

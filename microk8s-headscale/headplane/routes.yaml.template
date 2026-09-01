@@ -1,0 +1,22 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headplane
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`${HEADPLANE_HOST}`) && PathPrefix(`/admin`)
+      kind: Rule
+      middlewares: [{ name: headplane-strip-admin }]
+      services: [{ name: headplane, port: 3000 }]
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: headplane-strip-admin
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  stripPrefix: { prefixes: [/admin] }

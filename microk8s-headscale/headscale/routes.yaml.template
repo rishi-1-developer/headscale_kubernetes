@@ -1,0 +1,23 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headscale
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`${HEADSCALE_HOST}`) && PathPrefix(`/`)
+      kind: Rule
+      services: [{ name: headscale, port: 8080 }]
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteUDP
+metadata:
+  name: headscale-derp-stun
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  entryPoints: [derp-stun]
+  routes:
+    - services: [{ name: headscale, port: 3478 }]
