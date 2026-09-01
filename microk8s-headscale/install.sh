@@ -12,7 +12,9 @@ HEADSCALE_DB_NAME=${HEADSCALE_DB_NAME:-headscale}; HEADSCALE_DB_USER=${HEADSCALE
 export SERVER_IP HEADSCALE_NAMESPACE TRAEFIK_NAMESPACE LETSENCRYPT_EMAIL HEADSCALE_IMAGE HEADPLANE_IMAGE HEADSCALE_BASE_DOMAIN HEADSCALE_HOST HEADPLANE_HOST HEADSCALE_DB_HOST HEADSCALE_DB_PORT HEADSCALE_DB_NAME HEADSCALE_DB_USER
 export CA_ORGANIZATION CA_COMMON_NAME CA_VALIDITY_DAYS SERVER_CERT_VALIDITY_DAYS
 command -v microk8s >/dev/null || { echo 'MicroK8s is not installed.' >&2; exit 1; }; microk8s status --wait-ready
-microk8s enable dns hostpath-storage helm3
+for addon in dns hostpath-storage helm3; do
+  microk8s enable "$addon"
+done
 [[ "${ENABLE_NVIDIA_GPU:-false}" == true ]] && microk8s enable gpu
 envsubst < "$SCRIPT_DIR/headscale/namespace.yaml" | microk8s kubectl apply -f -
 "$SCRIPT_DIR/scripts/create-ca.sh"; "$SCRIPT_DIR/scripts/install-ca-secret.sh"

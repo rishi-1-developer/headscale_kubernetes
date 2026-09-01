@@ -1,5 +1,7 @@
 deployment:
   replicas: 1
+  strategy:
+    type: Recreate
 
 providers:
   kubernetesCRD:
