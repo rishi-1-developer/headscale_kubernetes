@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headscale
+  namespace: ${HEADSCALE_NAMESPACE}
+spec:
+  ingressClassName: ${INGRESS_CLASS_NAME}
+  tls:
+    - hosts: [${HEADSCALE_HOST}, ${HEADPLANE_HOST}]
+      secretName: ${TLS_SECRET_NAME}
+  rules:
+    - host: ${HEADSCALE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: headscale, port: { number: 8080 } } }
+    - host: ${HEADPLANE_HOST}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: headplane, port: { number: 3000 } } }
