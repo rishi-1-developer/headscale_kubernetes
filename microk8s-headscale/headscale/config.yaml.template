@@ -12,6 +12,12 @@ prefixes:
   v6: fd7a:115c:a1e0::/48
   allocation: sequential
 
+dns:
+  override_local_dns: true
+  nameservers:
+    global:
+      - ${HEADSCALE_DNS_NAMESERVER}
+
 derp:
   server:
     enabled: true
