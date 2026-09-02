@@ -13,6 +13,8 @@ prefixes:
   allocation: sequential
 
 dns:
+  magic_dns: true
+  base_domain: ${HEADSCALE_BASE_DOMAIN}
   override_local_dns: true
   nameservers:
     global:
