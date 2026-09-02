@@ -25,8 +25,8 @@ spec:
           image: ${HEADPLANE_IMAGE}
           ports: [{ name: http, containerPort: 3000 }]
           env:
-            - { name: HEADPLANE_COOKIE_SECRET, valueFrom: { secretKeyRef: { name: headplane-secret, key: cookie-secret } } }
-            - { name: HEADSCALE_API_KEY, valueFrom: { secretKeyRef: { name: headplane-secret, key: api-key } } }
+            - { name: HEADPLANE_COOKIE_SECRET, valueFrom: { secretKeyRef: { name: headscale-secrets, key: cookie-secret } } }
+            - { name: HEADSCALE_API_KEY, valueFrom: { secretKeyRef: { name: headscale-secrets, key: api-key } } }
           volumeMounts:
             - { name: config, mountPath: /etc/headplane }
             - { name: data, mountPath: /var/lib/headplane }
