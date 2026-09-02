@@ -18,8 +18,12 @@ if microk8s kubectl -n "$HEADSCALE_NAMESPACE" get secret headscale-secrets >/dev
   HEADPLANE_COOKIE_SECRET=$(microk8s kubectl -n "$HEADSCALE_NAMESPACE" get secret headscale-secrets -o jsonpath='{.data.cookie-secret}' | base64 -d)
   HEADSCALE_API_KEY=$(microk8s kubectl -n "$HEADSCALE_NAMESPACE" get secret headscale-secrets -o jsonpath='{.data.api-key}' 2>/dev/null | base64 -d || true)
 else
-  if [[ -z "$HEADPLANE_COOKIE_SECRET" ]]; then HEADPLANE_COOKIE_SECRET=$(openssl rand -hex 32); fi
+  if [[ -z "$HEADPLANE_COOKIE_SECRET" ]]; then HEADPLANE_COOKIE_SECRET=$(openssl rand -hex 16); fi
   microk8s kubectl -n "$HEADSCALE_NAMESPACE" create secret generic headscale-secrets --from-literal=db-password="$HEADSCALE_DB_PASSWORD" --from-literal=cookie-secret="$HEADPLANE_COOKIE_SECRET" --dry-run=client -o yaml | microk8s kubectl apply -f -
+fi
+if [[ ${#HEADPLANE_COOKIE_SECRET} -ne 32 ]]; then
+  echo "Existing Headplane cookie secret has the wrong length; generating a new 32-character secret."
+  HEADPLANE_COOKIE_SECRET=$(openssl rand -hex 16)
 fi
 if [[ -n "${TLS_CERT_FILE:-}" && -n "${TLS_KEY_FILE:-}" ]]; then
   microk8s kubectl -n "$HEADSCALE_NAMESPACE" create secret tls "$TLS_SECRET_NAME" --cert="$TLS_CERT_FILE" --key="$TLS_KEY_FILE" --dry-run=client -o yaml | microk8s kubectl apply -f -
