@@ -3,11 +3,14 @@ kind: Ingress
 metadata:
   name: headscale
   namespace: ${HEADSCALE_NAMESPACE}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
 spec:
   ingressClassName: ${INGRESS_CLASS_NAME}
   tls:
     - hosts: [${HEADSCALE_HOST}, ${HEADPLANE_HOST}]
-      secretName: ${TLS_SECRET_NAME}
   rules:
     - host: ${HEADSCALE_HOST}
       http:
