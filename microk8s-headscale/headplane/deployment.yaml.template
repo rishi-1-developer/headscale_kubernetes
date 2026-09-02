@@ -30,11 +30,14 @@ spec:
           volumeMounts:
             - { name: config, mountPath: /etc/headplane }
             - { name: data, mountPath: /var/lib/headplane }
+            - { name: oidc-secret, mountPath: /run/secrets/keycloak-client-secret, subPath: client-secret, readOnly: true }
       volumes:
         - name: config
           configMap: { name: headplane-config }
         - name: data
           persistentVolumeClaim: { claimName: headplane-data }
+        - name: oidc-secret
+          secret: { secretName: headscale-secrets }
 ---
 apiVersion: v1
 kind: Service
