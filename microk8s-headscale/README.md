@@ -1,4 +1,9 @@
-# MicroK8s Headscale package
+# MicroK8s Headscale package (legacy reference)
+
+The current deployment and recovery procedure is documented in [REDEPLOY.md](REDEPLOY.md).
+Use `start-simple.sh` and `manage-simple.sh` for the current workflow. The older
+`install.sh`, `uninstall.sh`, `verify.sh`, and `traefik/` files are retained as
+legacy material.
 
 This package deploys a single-node, hostpath-backed Headscale stack with Traefik as its only public entry point:
 
