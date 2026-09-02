@@ -40,6 +40,7 @@ database:
     name: ${HEADSCALE_DB_NAME}
     user: ${HEADSCALE_DB_USER}
     pass: __HEADSCALE_DB_PASSWORD__
+    ssl: true
 
 unix_socket: /var/run/headscale/headscale.sock
 unix_socket_permission: "0770"
